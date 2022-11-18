@@ -29,8 +29,7 @@ function navigex_find(pattern)
             } 
         end
     end
-    -- DEBUG: show output
-    print(vim.inspect(out))
+    return out
 end
 
 -- TODO: 
@@ -41,14 +40,32 @@ function navigex(pattern)
     local bufnr = vim.fn.bufnr('%')
     -- get the current UI
     local ui = vim.api.nvim_list_uis()[1]
+    -- create the scratch buffer displayed in the floating window
+    local buf = vim.api.nvim_create_buf(false, true)
+    -- get matches
+    local matches = navigex_find(pattern)
+    -- fill buffer with matches
+    for i, line in pairs(matches) do
+        vim.api.nvim_buf_set_lines(buf, i, -1, false, {line.line})
+    end
     -- define the size of the floating window
     local width = ui.width / 4 * 3
     local height = ui.height / 4 * 3
-    print(height)
+    -- create the floating window
+    local opts = {
+        relative = 'editor',
+        width = math.ceil(width),
+        height = math.ceil(height),
+        col = math.ceil((ui.width / 2) - (width / 2)), 
+        row = math.ceil((ui.height / 2) - (height / 2)), 
+        anchor = 'NW',
+        style = 'minimal'
+        }
+    local win = vim.api.nvim_open_win(buf, 1, opts)
 end
 
 --      add function to open new buffer with matched content
--- " https://www.statox.fr/posts/2021/03/breaking_habits_floating_window/
+-- " https =//www.statox.fr/posts/2021/03/breaking_habits_floating_window/
 -- function! Rhelp(text, ...) abort
 
 --     " Create the scratch buffer displayed in the floating window
@@ -123,13 +140,4 @@ end
 --                 \ 'style': 'minimal',
 --                 \ }
 --     let win = nvim_open_win(buf, 1, opts)
--- endfunction
-
--- function! GetPackage() abort
---     let line = getline('.')
---     let package = substitute(line, '^\v\d+:\s+(\w(\w|[.])+)\s+.*', '\1', '')
---     " close current buffer and call Rhelp with package
---     let rhelp = b:rhelp
---     close
---     call Rhelp(rhelp, package)
 -- endfunction
