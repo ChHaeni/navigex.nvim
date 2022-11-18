@@ -35,6 +35,18 @@ end
 
 -- TODO: 
 --      fill table with matched content
+
+function navigex(pattern)
+    -- get current buffer number
+    local bufnr = vim.fn.bufnr('%')
+    -- get the current UI
+    local ui = vim.api.nvim_list_uis()[1]
+    -- define the size of the floating window
+    local width = ui.width / 4 * 3
+    local height = ui.height / 4 * 3
+    print(height)
+end
+
 --      add function to open new buffer with matched content
 -- " https://www.statox.fr/posts/2021/03/breaking_habits_floating_window/
 -- function! Rhelp(text, ...) abort
