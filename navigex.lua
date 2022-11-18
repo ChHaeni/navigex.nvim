@@ -32,8 +32,6 @@ function navigex_find(pattern)
     return out
 end
 
--- TODO: 
---      fill table with matched content
 
 function navigex(pattern)
     -- get current buffer number
@@ -46,7 +44,10 @@ function navigex(pattern)
     local matches = navigex_find(pattern)
     -- fill buffer with matches
     for i, line in pairs(matches) do
-        vim.api.nvim_buf_set_lines(buf, i, -1, false, {line.line})
+        vim.api.nvim_buf_set_lines(buf, i - 1, -1, false, {
+            string.format('%3d', line.row) .. ': ' .. line.line
+        })
+        vim.api.nvim_buf_add_highlight(buf, 0, 'navigexMatch', i - 1, line.index_start + 4, line.index_end + 5)
     end
     -- define the size of the floating window
     local width = ui.width / 4 * 3
