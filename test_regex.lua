@@ -11,16 +11,26 @@ function navigex_find(pattern)
     local plain = false
     -- read content of current buffer
     local buf_content = vim.api.nvim_buf_get_lines(0, 0, -1, false)
-    print(vim.inspect(pattern))
+    -- prepare output
+    local out = {}
     -- iterate over content
+    local i = 0
     for k, line in pairs(buf_content) do
         -- match pattern? 
         s, e, m = line:find('(' .. pattern .. ')', 0, plain)
         if s ~= nil then
-            print('here we go!!!!')
-            print(k .. ': ' .. s .. '/' .. e .. ' = ' .. m)
+            i = i + 1
+            out[i] = {
+                row = k, 
+                line = line, 
+                index_start = s, 
+                index_end = e, 
+                match = m
+            } 
         end
     end
+    -- DEBUG: show output
+    print(vim.inspect(out))
 end
 
 -- TODO: 
