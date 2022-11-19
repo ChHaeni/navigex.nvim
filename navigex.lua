@@ -51,6 +51,10 @@ function navigex(pattern)
         })
         vim.api.nvim_buf_add_highlight(buf, 0, 'navigexMatch', i - 1, line.index_start + 4, line.index_end + 5)
     end
+    -- define mappings
+    vim.api.nvim_buf_set_keymap(buf, 'n', 'q', ':close<cr>', {})
+    vim.api.nvim_buf_set_keymap(buf, 'n', '<esc>', ':close<cr>', {})
+    vim.api.nvim_buf_set_keymap(buf, 'n', '<cr>', ':lua navigex_center(' .. bufnr .. ')<cr>', {})
     -- define the size of the floating window
     local width = ui.width / 4 * 3
     local height = ui.height / 4 * 3
