@@ -69,4 +69,7 @@ function navigex(pattern)
         style = 'minimal'
         }
     local win = vim.api.nvim_open_win(buf, 1, opts)
+    -- highlighting color (TODO: Add highlighting color as option)
+    vim.fn.win_execute(win, 'hi def link navigexMatch GruvboxOrangeBold')
+end
 end
