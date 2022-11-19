@@ -16,6 +16,7 @@ function navigex_find(pattern)
     local out = {}
     -- iterate over content
     local i = 0
+    local max = 0
     for k, line in pairs(buf_content) do
         -- match pattern? 
         s, e, m = line:find('(' .. pattern .. ')', 0, plain)
@@ -30,7 +31,7 @@ function navigex_find(pattern)
             } 
         end
     end
-    return out
+    return {table = out, max = out[i].row}
 end
 
 
@@ -44,12 +45,14 @@ function navigex(pattern)
     -- get matches
     local matches = navigex_find(pattern)
     -- TODO: get max row number -> get floor(log10(max)) digits
+    local digits = math.floor(math.log10(matches.max)) + 1
     -- fill buffer with matches
-    for i, line in pairs(matches) do
+    for i, line in pairs(matches.table) do
         vim.api.nvim_buf_set_lines(buf, i - 1, -1, false, {
-            string.format('%3d', line.row) .. ': ' .. line.line
+            string.format('%' .. digits .. 'd', line.row) .. ': ' .. line.line
         })
-        vim.api.nvim_buf_add_highlight(buf, 0, 'navigexMatch', i - 1, line.index_start + 4, line.index_end + 5)
+        vim.api.nvim_buf_add_highlight(buf, 0, 'navigexMatch', i - 1, 
+            line.index_start + digits + 1, line.index_end + digits + 2)
     end
     -- define mappings
     vim.api.nvim_buf_set_keymap(buf, 'n', 'q', ':close<cr>', {})
@@ -62,15 +65,19 @@ function navigex(pattern)
     -- define the size of the floating window
     -- local width = ui.width / 4 * 3
     -- local height = ui.height / 4 * 3
-    local width = ui.width / 2
-    local height = ui.height / 2
+    local width = math.ceil(ui.width / 2)
+    -- local height = ui.height / 2
     -- create the floating window
     local opts = {
         relative = 'editor',
-        width = math.ceil(width),
-        height = math.ceil(height),
-        col = math.ceil((ui.width / 2) - (width / 2)), 
-        row = math.ceil((ui.height / 2) - (height / 2)), 
+        width = width,
+        height = ui.height,
+        col = ui.width - width,
+        row = 0,
+        -- width = math.ceil(width),
+        -- height = math.ceil(height),
+        -- col = math.ceil((ui.width / 2) - (width / 2)), 
+        -- row = math.ceil((ui.height / 2) - (height / 2)), 
         anchor = 'NW',
         style = 'minimal'
         }
