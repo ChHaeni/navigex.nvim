@@ -55,9 +55,15 @@ function navigex(pattern)
     vim.api.nvim_buf_set_keymap(buf, 'n', 'q', ':close<cr>', {})
     vim.api.nvim_buf_set_keymap(buf, 'n', '<esc>', ':close<cr>', {})
     vim.api.nvim_buf_set_keymap(buf, 'n', '<cr>', ':lua navigex_center(' .. bufnr .. ')<cr>', {})
+    vim.api.nvim_buf_set_keymap(buf, 'n', 'h', ':normal! h<cr>', {})
+    vim.api.nvim_buf_set_keymap(buf, 'n', 'j', ':normal! j<cr>', {})
+    vim.api.nvim_buf_set_keymap(buf, 'n', 'k', ':normal! k<cr>', {})
+    vim.api.nvim_buf_set_keymap(buf, 'n', 'l', ':normal! l<cr>', {})
     -- define the size of the floating window
-    local width = ui.width / 4 * 3
-    local height = ui.height / 4 * 3
+    -- local width = ui.width / 4 * 3
+    -- local height = ui.height / 4 * 3
+    local width = ui.width / 2
+    local height = ui.height / 2
     -- create the floating window
     local opts = {
         relative = 'editor',
