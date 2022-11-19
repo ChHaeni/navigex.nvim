@@ -1,8 +1,10 @@
 -- TODO:
 --  - add mappings to:
 --      a) jump to line & close floating buffer
+--          -> call normal {line}G | :close
 --      b) align buffer to current line (without closing floating window)
---  - switch to true regex instead of lua patterns?
+--          -> call normal {line}G 
+--  - add option to switch to vimscript regex instead of lua patterns?
 
 -- find pattern in current buffer
 function navigex_find(pattern)
@@ -41,6 +43,7 @@ function navigex(pattern)
     local buf = vim.api.nvim_create_buf(false, true)
     -- get matches
     local matches = navigex_find(pattern)
+    -- TODO: get max row number -> get floor(log10(max)) digits
     -- fill buffer with matches
     for i, line in pairs(matches) do
         vim.api.nvim_buf_set_lines(buf, i - 1, -1, false, {
