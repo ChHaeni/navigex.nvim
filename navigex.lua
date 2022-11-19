@@ -72,4 +72,13 @@ function navigex(pattern)
     -- highlighting color (TODO: Add highlighting color as option)
     vim.fn.win_execute(win, 'hi def link navigexMatch GruvboxOrangeBold')
 end
+
+-- center current line (eventually transfer to vimscript?)
+function navigex_center(parent_buffer)
+    local line = vim.fn.getline('.')
+    -- get row number
+    local row = line:match('^%s*(%d+):')
+    print(row)
+    -- TODO: get row number from floating buffer
+    vim.fn.win_execute(vim.fn.bufwinid(parent_buffer), 'normal ' .. row .. 'Gzz')
 end
