@@ -100,7 +100,7 @@ end
 function Nav:ncenter(parent_buffer)
     local line = vim.fn.line('.')
     -- get match
-    local m = self.matches.table[line + 1]
+    local m = self.matches.table[line]
     -- TODO: get row number from floating buffer
     vim.fn.win_execute(vim.fn.bufwinid(parent_buffer), 'normal ' .. m.row .. 'Gzz')
 end
