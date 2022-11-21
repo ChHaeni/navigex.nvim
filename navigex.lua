@@ -6,8 +6,11 @@
 --          -> call normal {line}G 
 --  - add option to switch to vimscript regex instead of lua patterns?
 
+-- define class
+navigex = {}
+
 -- find pattern in current buffer
-function navigex_find(pattern)
+function navigex:nfind(pattern)
     -- move to function argument
     local plain = false
     -- read content of current buffer
@@ -35,7 +38,7 @@ function navigex_find(pattern)
 end
 
 
-function navigex(pattern)
+function navigex:navigate(pattern)
     -- get current buffer number
     local bufnr = vim.fn.bufnr('%')
     -- get the current UI
@@ -43,11 +46,11 @@ function navigex(pattern)
     -- create the scratch buffer displayed in the floating window
     local buf = vim.api.nvim_create_buf(false, true)
     -- get matches
-    local matches = navigex_find(pattern)
+    self.matches = self:nfind(pattern)
     -- TODO: get max row number -> get floor(log10(max)) digits
-    local digits = math.floor(math.log10(matches.max)) + 1
+    local digits = math.floor(math.log10(self.matches.max)) + 1
     -- fill buffer with matches
-    for i, line in pairs(matches.table) do
+    for i, line in pairs(self.matches.table) do
         vim.api.nvim_buf_set_lines(buf, i - 1, -1, false, {
             string.format('%' .. digits .. 'd', line.row) .. ': ' .. line.line
         })
@@ -57,7 +60,7 @@ function navigex(pattern)
     -- define mappings
     vim.api.nvim_buf_set_keymap(buf, 'n', 'q', ':close<cr>', {})
     vim.api.nvim_buf_set_keymap(buf, 'n', '<esc>', ':close<cr>', {})
-    vim.api.nvim_buf_set_keymap(buf, 'n', '<cr>', ':lua navigex_center(' .. bufnr .. ')<cr>', {})
+    vim.api.nvim_buf_set_keymap(buf, 'n', '<cr>', ':lua navigex:ncenter(' .. bufnr .. ')<cr>', {})
     vim.api.nvim_buf_set_keymap(buf, 'n', 'h', ':normal! h<cr>', {})
     vim.api.nvim_buf_set_keymap(buf, 'n', 'j', ':normal! j<cr>', {})
     vim.api.nvim_buf_set_keymap(buf, 'n', 'k', ':normal! k<cr>', {})
@@ -87,11 +90,10 @@ function navigex(pattern)
 end
 
 -- center current line (eventually transfer to vimscript?)
-function navigex_center(parent_buffer)
-    local line = vim.fn.getline('.')
-    -- get row number
-    local row = line:match('^%s*(%d+):')
-    print(row)
+function navigex:ncenter(parent_buffer)
+    local line = vim.fn.line('.')
+    -- get match
+    local m = self.matches.table[line + 1]
     -- TODO: get row number from floating buffer
-    vim.fn.win_execute(vim.fn.bufwinid(parent_buffer), 'normal ' .. row .. 'Gzz')
+    vim.fn.win_execute(vim.fn.bufwinid(parent_buffer), 'normal ' .. m.row .. 'Gzz')
 end
