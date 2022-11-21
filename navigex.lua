@@ -27,7 +27,8 @@ function Nav:nfind(pattern)
     local max = 0
     for k, line in pairs(buf_content) do
         -- match pattern? 
-        s, e, m = line:find('(' .. pattern .. ')', 0, plain)
+        -- s, e, m = line:find('(' .. pattern .. ')', 0, plain)
+        s, e, m = line:find(pattern, 0, plain)
         if s ~= nil then
             i = i + 1
             out[i] = {
@@ -57,12 +58,19 @@ function Nav:navigate(pattern)
     -- fill buffer with matches
     -- style 1: row + line
     -- style 2: match only (with a centered dot as prefix?)
+    -- for i, line in pairs(self.matches.table) do
+    --     vim.api.nvim_buf_set_lines(buf, i - 1, -1, false, {
+    --         string.format('%' .. digits .. 'd', line.row) .. ': ' .. line.line
+    --     })
+    --     vim.api.nvim_buf_add_highlight(buf, 0, 'navigexMatch', i - 1, 
+    --         line.index_start + digits + 1, line.index_end + digits + 2)
+    -- end
     for i, line in pairs(self.matches.table) do
         vim.api.nvim_buf_set_lines(buf, i - 1, -1, false, {
-            string.format('%' .. digits .. 'd', line.row) .. ': ' .. line.line
+            '- ' .. line.match
         })
         vim.api.nvim_buf_add_highlight(buf, 0, 'navigexMatch', i - 1, 
-            line.index_start + digits + 1, line.index_end + digits + 2)
+            2, -1)
     end
     -- define mappings
     vim.api.nvim_buf_set_keymap(buf, 'n', 'q', ':close<cr>', {})
