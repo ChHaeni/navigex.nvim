@@ -6,6 +6,11 @@
 --          -> call normal {line}G 
 --  - add option to switch to vimscript regex instead of lua patterns?
 
+-- global function
+function navigex(pattern)
+    Nav:navigate(pattern)
+end
+
 -- define class
 Nav = {}
 
