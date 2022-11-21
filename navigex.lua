@@ -7,10 +7,10 @@
 --  - add option to switch to vimscript regex instead of lua patterns?
 
 -- define class
-navigex = {}
+Nav = {}
 
 -- find pattern in current buffer
-function navigex:nfind(pattern)
+function Nav:nfind(pattern)
     -- move to function argument
     local plain = false
     -- read content of current buffer
@@ -38,7 +38,7 @@ function navigex:nfind(pattern)
 end
 
 
-function navigex:navigate(pattern)
+function Nav:navigate(pattern)
     -- get current buffer number
     local bufnr = vim.fn.bufnr('%')
     -- get the current UI
@@ -50,6 +50,8 @@ function navigex:navigate(pattern)
     -- TODO: get max row number -> get floor(log10(max)) digits
     local digits = math.floor(math.log10(self.matches.max)) + 1
     -- fill buffer with matches
+    -- style 1: row + line
+    -- style 2: match only (with a centered dot as prefix?)
     for i, line in pairs(self.matches.table) do
         vim.api.nvim_buf_set_lines(buf, i - 1, -1, false, {
             string.format('%' .. digits .. 'd', line.row) .. ': ' .. line.line
@@ -60,7 +62,7 @@ function navigex:navigate(pattern)
     -- define mappings
     vim.api.nvim_buf_set_keymap(buf, 'n', 'q', ':close<cr>', {})
     vim.api.nvim_buf_set_keymap(buf, 'n', '<esc>', ':close<cr>', {})
-    vim.api.nvim_buf_set_keymap(buf, 'n', '<cr>', ':lua navigex:ncenter(' .. bufnr .. ')<cr>', {})
+    vim.api.nvim_buf_set_keymap(buf, 'n', '<cr>', ':lua Nav:ncenter(' .. bufnr .. ')<cr>', {})
     vim.api.nvim_buf_set_keymap(buf, 'n', 'h', ':normal! h<cr>', {})
     vim.api.nvim_buf_set_keymap(buf, 'n', 'j', ':normal! j<cr>', {})
     vim.api.nvim_buf_set_keymap(buf, 'n', 'k', ':normal! k<cr>', {})
@@ -90,7 +92,7 @@ function navigex:navigate(pattern)
 end
 
 -- center current line (eventually transfer to vimscript?)
-function navigex:ncenter(parent_buffer)
+function Nav:ncenter(parent_buffer)
     local line = vim.fn.line('.')
     -- get match
     local m = self.matches.table[line + 1]
