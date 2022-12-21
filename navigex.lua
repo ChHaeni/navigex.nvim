@@ -5,6 +5,12 @@
 --      b) align buffer to current line (without closing floating window)
 --          -> call normal {line}G 
 --  - add option to switch to vimscript regex instead of lua patterns?
+--      -> see https://neovim.io/doc/user/lua.html#lua-regex
+--  - add hierarchical matching
+--      -> add option to provide several patterns
+--      -> also add mapping to jump to upper level?
+--
+-- arguments: tables with a) pattern to match b) replacement (\1 or entire line) c) highlighting color (or just highlight yes/no?)
 
 -- global function
 function navigex(pattern)
