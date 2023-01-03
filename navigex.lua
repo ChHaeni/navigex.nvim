@@ -74,19 +74,33 @@ function Nav:initalize_pattern(pattern)
     elseif type(pattern) ~= "table" then
         return nil, print("navigex: argument 'pattern': expected table or string, got " .. type(pattern))
     end
-    -- check number of layers
-    self.n_layers = table.getn(pattern)
     -- loop over patterns and add options
     self.patterns = {}
     for i, t in ipairs(pattern) do
+        self.patterns[i] = {}
         -- initialize pattern table
-        self.patterns[i] = self.options
+        for k, v in pairs(self.options) do
+            if type(v) == "table" then
+                local len = #v
+                local ind = (i - 1) % len + 1
+                self.patterns[i][k] = v[ind]
+            else
+                self.patterns[i][k] = v
+            end
+        end
         -- insert existing values
         if type(t) == "string" then
             self.patterns[i].pattern = t
         else
             for k, v in pairs(t) do
-                self.patterns[i][k] = v
+                -- recycle & add correct layer value
+                if type(v) == "table" then
+                    local len = #v
+                    local ind = (i - 1) % len + 1
+                    self.patterns[i][k] = v[ind]
+                else
+                    self.patterns[i][k] = v
+                end
             end
         end
         -- check pattern argument
@@ -113,20 +127,57 @@ function Nav:find_pattern()
     -- iterate over content
     local i = 0
     for k, line in pairs(buf_content) do
-        -- match pattern? 
-        s, e, m = line:find(self.pattern, 0, plain)
-        if s ~= nil then
-            i = i + 1
-            out[i] = {
-                row = k, 
-                line = line, 
-                index_start = s, 
-                index_end = e, 
-                match = m or line
-            } 
+        -- iterate over patterns
+        for _, tab in ipairs(self.patterns) do
+            -- match pattern? 
+            s, e, m = line:find(tab.pattern, 0, plain)
+            if s ~= nil then
+                i = i + 1
+                out[i] = {
+                    row = k, 
+                    line = line, 
+                    index_start = s, 
+                    index_end = e, 
+                    color = tab.highlighting_colors,
+                    indent = tab.indentation,
+                    symbol = list_symbols,
+                    number = line_numbers,
+                    trim = trim_whitespace,
+                    match = m or line
+                } 
+            end
         end
     end
     self.matches = {table = out, max = out[i].row}
+end
+
+-- populate ui
+function Nav:populate_ui()
+    -- TODO: 1) add line number as optional argument
+    --       2) what indicator should be used? triangle to right, bullet, ...
+    --       3) add option to use hierarchical toc -> e.g. by providing a pattern table
+    --       2+3) -> pattern should be table with indicator and numbering defined. If missing, get indicator from default and numbering from global option
+    -- create scratch buffer for floating window
+    self.buffer_handle = vim.api.nvim_create_buf(false, true)
+    -- get max row number to align after row numbers
+    local digits = math.floor(math.log10(self.matches.max)) + 1
+    -- fill buffer with matches
+    -- style 1: row + line
+    -- style 2: match only (with a centered dot as prefix?)
+    -- for i, line in pairs(self.matches.table) do
+    --     vim.api.nvim_buf_set_lines(self.buffer_handle, i - 1, -1, false, {
+    --         string.format('%' .. digits .. 'd', line.row) .. ': ' .. line.line
+    --     })
+    --     vim.api.nvim_buf_add_highlight(self.buffer_handle, 0, 'navigexMatch', i - 1, 
+    --         line.index_start + digits + 1, line.index_end + digits + 2)
+    -- end
+    for i, line in pairs(self.matches.table) do
+        vim.api.nvim_buf_set_lines(self.buffer_handle, i - 1, -1, false, {
+            '- ' .. line.match
+        })
+        vim.api.nvim_buf_add_highlight(self.buffer_handle, 0, 'navigexMatch', i - 1, 
+            line.index_start + 1, line.index_end + 2)
+    end
 end
 
 -- create window
@@ -168,35 +219,6 @@ function Nav:buffer_mappings()
     vim.api.nvim_buf_set_keymap(self.buffer_handle, 'n', 'j', ':normal! j<cr>', {})
     vim.api.nvim_buf_set_keymap(self.buffer_handle, 'n', 'k', ':normal! k<cr>', {})
     vim.api.nvim_buf_set_keymap(self.buffer_handle, 'n', 'l', ':normal! l<cr>', {})
-end
-
--- populate ui
-function Nav:populate_ui()
-    -- TODO: 1) add line number as optional argument
-    --       2) what indicator should be used? triangle to right, bullet, ...
-    --       3) add option to use hierarchical toc -> e.g. by providing a pattern table
-    --       2+3) -> pattern should be table with indicator and numbering defined. If missing, get indicator from default and numbering from global option
-    -- create scratch buffer for floating window
-    self.buffer_handle = vim.api.nvim_create_buf(false, true)
-    -- get max row number to align after row numbers
-    local digits = math.floor(math.log10(self.matches.max)) + 1
-    -- fill buffer with matches
-    -- style 1: row + line
-    -- style 2: match only (with a centered dot as prefix?)
-    -- for i, line in pairs(self.matches.table) do
-    --     vim.api.nvim_buf_set_lines(self.buffer_handle, i - 1, -1, false, {
-    --         string.format('%' .. digits .. 'd', line.row) .. ': ' .. line.line
-    --     })
-    --     vim.api.nvim_buf_add_highlight(self.buffer_handle, 0, 'navigexMatch', i - 1, 
-    --         line.index_start + digits + 1, line.index_end + digits + 2)
-    -- end
-    for i, line in pairs(self.matches.table) do
-        vim.api.nvim_buf_set_lines(self.buffer_handle, i - 1, -1, false, {
-            '- ' .. line.match
-        })
-        vim.api.nvim_buf_add_highlight(self.buffer_handle, 0, 'navigexMatch', i - 1, 
-            line.index_start + 1, line.index_end + 2)
-    end
 end
 
 -- center current line (eventually transfer to vimscript?)
