@@ -6,27 +6,36 @@
 --
 -- arguments: tables with a) pattern to match b) replacement (\1 or entire line) c) highlighting color (or just highlight yes/no?)
 -- CHECK -> non-matching group in lua?
+-- TODO how are options set in a lua plugin?
 
 -- what pattern types should be made available?
 -- 1) pattern without group -> e.g. function -> highlight function
 -- 2) pattern with group -> e.g. section -> highlight section title (match)
 
 -- global function
-function navigex(pattern)
-    Nav:navigate(pattern)
+function navigex(pattern, options)
+    Nav:navigate(pattern, options)
 end
 
 -- define class
 Nav = {
-    list_symbols = {'a', 'b', 'c'},
-    highlighting_colors = "GruvboxOrangeBold",
-    line_numbers = true,
-    indentation = 4,
-    trim_whitespace = false
+    options = {
+        line_numbers = true,
+        list_symbols = {'a', 'b', 'c'},
+        highlighting_colors = "String",
+        indentation = 4,
+        trim_whitespace = false
+    }
 }
 
 -- main function
-function Nav:navigate(pattern)
+function Nav:navigate(pattern, options)
+    -- check pattern argument
+    if not (type(pattern) == "string") then 
+        return nil, print("navigex: argument 'pattern': expected string, got " .. type(pattern))
+    end
+    -- check options argument
+    self:check_options(options)
     -- initialize patterns
     self:initalize_pattern(pattern)
     -- get matches
@@ -38,6 +47,27 @@ function Nav:navigate(pattern)
     -- build ui
     self:create_window()
     -- something to return?
+end
+
+-- check options
+function Nav:check_options(opts)
+    if not opts then
+        return nil
+    end
+    for k, v in pairs(opts) do
+        -- check if option exists
+        if not self.options[k] then
+            return nil, print("navigex: option " .. k .. " does not exist")
+        end
+        -- check type
+        local expect = type(self.options[k])
+        if not (type(v) == expect) then
+            return nil, print("navigex: option " .. k .. ": expected " .. 
+                expect .. ", got " .. type(v))
+        end
+        -- assign to options
+        self.options[k] = v
+    end
 end
 
 -- initialize patterns
@@ -100,7 +130,7 @@ function Nav:create_window()
         }
     local win = vim.api.nvim_open_win(self.buffer_handle, 1, opts)
     -- highlighting color (TODO: Add highlighting color as option)
-    vim.fn.win_execute(win, 'hi def link navigexMatch GruvboxOrangeBold')
+    vim.fn.win_execute(win, 'hi def link navigexMatch ' .. self.options.highlighting_colors)
 end
 
 -- buffer mappings
