@@ -1,17 +1,11 @@
 -- TODO:
---  - add mappings to:
---      a) jump to line & close floating buffer
---          -> call normal {line}G | :close
---      b) align buffer to current line (without closing floating window)
---          -> call normal {line}G 
---  - add option to switch to vimscript regex instead of lua patterns?
---      -> see https://neovim.io/doc/user/lua.html#lua-regex
 --  - add option to add line numbers
 --  - add hierarchical matching
 --      -> add option to provide several patterns
 --      -> also add mapping to jump to upper level?
 --
 -- arguments: tables with a) pattern to match b) replacement (\1 or entire line) c) highlighting color (or just highlight yes/no?)
+-- CHECK -> non-matching group in lua?
 
 -- what pattern types should be made available?
 -- 1) pattern without group -> e.g. function -> highlight function
@@ -23,14 +17,20 @@ function navigex(pattern)
 end
 
 -- define class
-Nav = {}
+Nav = {
+    list_symbols = {'a', 'b', 'c'},
+    highlighting_colors = "GruvboxOrangeBold",
+    line_numbers = true,
+    indentation = 4,
+    trim_whitespace = false
+}
 
 -- main function
 function Nav:navigate(pattern)
+    -- initialize patterns
+    self:initalize_pattern(pattern)
     -- get matches
-    self.matches = self:find_pattern(pattern)
-    -- create scratch buffer for floating window
-    self.buffer_handle = vim.api.nvim_create_buf(false, true)
+    self:find_pattern()
     -- populate ui
     self:populate_ui()
     -- add mappings
@@ -40,8 +40,21 @@ function Nav:navigate(pattern)
     -- something to return?
 end
 
+-- initialize patterns
+function Nav:initalize_pattern(pattern)
+    -- how many layers?
+    -- indicators?
+    -- highlighting?
+    -- numbering?
+    -- dummy
+    self.pattern = pattern
+end
+
 -- find pattern in current buffer
-function Nav:find_pattern(pattern)
+function Nav:find_pattern()
+    -- TODO
+    --  - add option to switch to vimscript regex instead of lua patterns?
+    --      -> see https://neovim.io/doc/user/lua.html#lua-regex
     -- move to function argument
     local plain = false
     -- read content of current buffer
@@ -50,10 +63,9 @@ function Nav:find_pattern(pattern)
     local out = {}
     -- iterate over content
     local i = 0
-    local max = 0
     for k, line in pairs(buf_content) do
         -- match pattern? 
-        s, e, m = line:find(pattern, 0, plain)
+        s, e, m = line:find(self.pattern, 0, plain)
         if s ~= nil then
             i = i + 1
             out[i] = {
@@ -65,11 +77,12 @@ function Nav:find_pattern(pattern)
             } 
         end
     end
-    return {table = out, max = out[i].row}
+    self.matches = {table = out, max = out[i].row}
 end
 
 -- create window
 function Nav:create_window()
+    -- TODO: add highlighting color as optional argument
     -- get the current UI
     local ui = vim.api.nvim_list_uis()[1]
     -- define the size of the floating window
@@ -92,6 +105,10 @@ end
 
 -- buffer mappings
 function Nav:buffer_mappings()
+    -- TODO: add user defined keymappings -> how?
+    --  - add mappings to:
+    --      a) jump to line & close floating buffer
+    --          -> call normal {line}G | :close
     -- get current buffer number
     local bufnr = vim.fn.bufnr('%')
     -- define mappings
@@ -106,7 +123,13 @@ end
 
 -- populate ui
 function Nav:populate_ui()
-    -- TODO: get max row number -> get floor(log10(max)) digits
+    -- TODO: 1) add line number as optional argument
+    --       2) what indicator should be used? triangle to right, bullet, ...
+    --       3) add option to use hierarchical toc -> e.g. by providing a pattern table
+    --       2+3) -> pattern should be table with indicator and numbering defined. If missing, get indicator from default and numbering from global option
+    -- create scratch buffer for floating window
+    self.buffer_handle = vim.api.nvim_create_buf(false, true)
+    -- get max row number to align after row numbers
     local digits = math.floor(math.log10(self.matches.max)) + 1
     -- fill buffer with matches
     -- style 1: row + line
