@@ -12,6 +12,10 @@
 --
 -- arguments: tables with a) pattern to match b) replacement (\1 or entire line) c) highlighting color (or just highlight yes/no?)
 
+-- what pattern types should be made available?
+-- 1) pattern without group -> e.g. function -> highlight function
+-- 2) pattern with group -> e.g. section -> highlight section title (match)
+
 -- global function
 function navigex(pattern)
     Nav:navigate(pattern)
@@ -48,7 +52,7 @@ function Nav:navigate(pattern)
                 '- ' .. line.match
             })
             vim.api.nvim_buf_add_highlight(buf, 0, 'navigexMatch', i - 1, 
-                2, -1)
+                line.index_start + 1, line.index_end + 2)
         end
         -- define mappings
         vim.api.nvim_buf_set_keymap(buf, 'n', 'q', ':close<cr>', {})
