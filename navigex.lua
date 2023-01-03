@@ -105,7 +105,7 @@ function Nav:find_pattern(pattern)
                 line = line, 
                 index_start = s, 
                 index_end = e, 
-                match = m
+                match = m or line
             } 
         end
     end
