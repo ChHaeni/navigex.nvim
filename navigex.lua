@@ -30,10 +30,6 @@ Nav = {
 
 -- main function
 function Nav:navigate(pattern, options)
-    -- check pattern argument
-    if not (type(pattern) == "string") then 
-        return nil, print("navigex: argument 'pattern': expected string, got " .. type(pattern))
-    end
     -- check options argument
     self:check_options(options)
     -- initialize patterns
@@ -72,12 +68,35 @@ end
 
 -- initialize patterns
 function Nav:initalize_pattern(pattern)
-    -- how many layers?
-    -- indicators?
-    -- highlighting?
-    -- numbering?
-    -- dummy
-    self.pattern = pattern
+    -- convert single pattern string to table
+    if type(pattern) == "string" then
+        pattern = {pattern}
+    elseif type(pattern) ~= "table" then
+        return nil, print("navigex: argument 'pattern': expected table or string, got " .. type(pattern))
+    end
+    -- check number of layers
+    self.n_layers = table.getn(pattern)
+    -- loop over patterns and add options
+    self.patterns = {}
+    for i, t in ipairs(pattern) do
+        -- initialize pattern table
+        self.patterns[i] = self.options
+        -- insert existing values
+        if type(t) == "string" then
+            self.patterns[i].pattern = t
+        else
+            for k, v in pairs(t) do
+                self.patterns[i][k] = v
+            end
+        end
+        -- check pattern argument
+        if not self.patterns[i].pattern then
+            return nil, print("navigex: 'pattern': expected string, got " .. type(self.patterns[i].pattern) ..
+                " - did you forget to name the table entry 'pattern'?")
+        elseif not (type(self.patterns[i].pattern) == "string") then 
+            return nil, print("navigex: 'pattern': expected string, got " .. type(self.patterns[i].pattern))
+        end
+    end
 end
 
 -- find pattern in current buffer
