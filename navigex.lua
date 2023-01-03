@@ -6,6 +6,7 @@
 --          -> call normal {line}G 
 --  - add option to switch to vimscript regex instead of lua patterns?
 --      -> see https://neovim.io/doc/user/lua.html#lua-regex
+--  - add option to add line numbers
 --  - add hierarchical matching
 --      -> add option to provide several patterns
 --      -> also add mapping to jump to upper level?
@@ -28,62 +29,14 @@ Nav = {}
 function Nav:navigate(pattern)
     -- get matches
     self.matches = self:find_pattern(pattern)
-    -- populate ui function
-        -- get current buffer number
-        local bufnr = vim.fn.bufnr('%')
-        -- get the current UI
-        local ui = vim.api.nvim_list_uis()[1]
-        -- create the scratch buffer displayed in the floating window
-        local buf = vim.api.nvim_create_buf(false, true)
-        -- TODO: get max row number -> get floor(log10(max)) digits
-        local digits = math.floor(math.log10(self.matches.max)) + 1
-        -- fill buffer with matches
-        -- style 1: row + line
-        -- style 2: match only (with a centered dot as prefix?)
-        -- for i, line in pairs(self.matches.table) do
-        --     vim.api.nvim_buf_set_lines(buf, i - 1, -1, false, {
-        --         string.format('%' .. digits .. 'd', line.row) .. ': ' .. line.line
-        --     })
-        --     vim.api.nvim_buf_add_highlight(buf, 0, 'navigexMatch', i - 1, 
-        --         line.index_start + digits + 1, line.index_end + digits + 2)
-        -- end
-        for i, line in pairs(self.matches.table) do
-            vim.api.nvim_buf_set_lines(buf, i - 1, -1, false, {
-                '- ' .. line.match
-            })
-            vim.api.nvim_buf_add_highlight(buf, 0, 'navigexMatch', i - 1, 
-                line.index_start + 1, line.index_end + 2)
-        end
-        -- define mappings
-        vim.api.nvim_buf_set_keymap(buf, 'n', 'q', ':close<cr>', {})
-        vim.api.nvim_buf_set_keymap(buf, 'n', '<esc>', ':close<cr>', {})
-        vim.api.nvim_buf_set_keymap(buf, 'n', '<cr>', ':lua Nav:centering_line(' .. bufnr .. ')<cr>', {})
-        vim.api.nvim_buf_set_keymap(buf, 'n', 'h', ':normal! h<cr>', {})
-        vim.api.nvim_buf_set_keymap(buf, 'n', 'j', ':normal! j<cr>', {})
-        vim.api.nvim_buf_set_keymap(buf, 'n', 'k', ':normal! k<cr>', {})
-        vim.api.nvim_buf_set_keymap(buf, 'n', 'l', ':normal! l<cr>', {})
-        -- define the size of the floating window
-        -- local width = ui.width / 4 * 3
-        -- local height = ui.height / 4 * 3
-        local width = math.ceil(ui.width / 2)
-        -- local height = ui.height / 2
-        -- create the floating window
-        local opts = {
-            relative = 'editor',
-            width = width,
-            height = ui.height,
-            col = ui.width - width,
-            row = 0,
-            -- width = math.ceil(width),
-            -- height = math.ceil(height),
-            -- col = math.ceil((ui.width / 2) - (width / 2)), 
-            -- row = math.ceil((ui.height / 2) - (height / 2)), 
-            anchor = 'NW',
-            style = 'minimal'
-            }
-        local win = vim.api.nvim_open_win(buf, 1, opts)
-        -- highlighting color (TODO: Add highlighting color as option)
-        vim.fn.win_execute(win, 'hi def link navigexMatch GruvboxOrangeBold')
+    -- create scratch buffer for floating window
+    self.buffer_handle = vim.api.nvim_create_buf(false, true)
+    -- populate ui
+    self:populate_ui()
+    -- add mappings
+    self:buffer_mappings()
+    -- build ui
+    self:create_window()
     -- something to return?
 end
 
@@ -100,7 +53,6 @@ function Nav:find_pattern(pattern)
     local max = 0
     for k, line in pairs(buf_content) do
         -- match pattern? 
-        -- s, e, m = line:find('(' .. pattern .. ')', 0, plain)
         s, e, m = line:find(pattern, 0, plain)
         if s ~= nil then
             i = i + 1
@@ -114,6 +66,65 @@ function Nav:find_pattern(pattern)
         end
     end
     return {table = out, max = out[i].row}
+end
+
+-- create window
+function Nav:create_window()
+    -- get the current UI
+    local ui = vim.api.nvim_list_uis()[1]
+    -- define the size of the floating window
+    local width = math.ceil(ui.width / 2)
+    -- local height = ui.height / 2
+    -- create the floating window
+    local opts = {
+        relative = 'editor',
+        width = width,
+        height = ui.height,
+        col = ui.width - width,
+        row = 0,
+        anchor = 'NW',
+        style = 'minimal'
+        }
+    local win = vim.api.nvim_open_win(self.buffer_handle, 1, opts)
+    -- highlighting color (TODO: Add highlighting color as option)
+    vim.fn.win_execute(win, 'hi def link navigexMatch GruvboxOrangeBold')
+end
+
+-- buffer mappings
+function Nav:buffer_mappings()
+    -- get current buffer number
+    local bufnr = vim.fn.bufnr('%')
+    -- define mappings
+    vim.api.nvim_buf_set_keymap(self.buffer_handle, 'n', 'q', ':close<cr>', {})
+    vim.api.nvim_buf_set_keymap(self.buffer_handle, 'n', '<esc>', ':close<cr>', {})
+    vim.api.nvim_buf_set_keymap(self.buffer_handle, 'n', '<cr>', ':lua Nav:centering_line(' .. bufnr .. ')<cr>', {})
+    vim.api.nvim_buf_set_keymap(self.buffer_handle, 'n', 'h', ':normal! h<cr>', {})
+    vim.api.nvim_buf_set_keymap(self.buffer_handle, 'n', 'j', ':normal! j<cr>', {})
+    vim.api.nvim_buf_set_keymap(self.buffer_handle, 'n', 'k', ':normal! k<cr>', {})
+    vim.api.nvim_buf_set_keymap(self.buffer_handle, 'n', 'l', ':normal! l<cr>', {})
+end
+
+-- populate ui
+function Nav:populate_ui()
+    -- TODO: get max row number -> get floor(log10(max)) digits
+    local digits = math.floor(math.log10(self.matches.max)) + 1
+    -- fill buffer with matches
+    -- style 1: row + line
+    -- style 2: match only (with a centered dot as prefix?)
+    -- for i, line in pairs(self.matches.table) do
+    --     vim.api.nvim_buf_set_lines(self.buffer_handle, i - 1, -1, false, {
+    --         string.format('%' .. digits .. 'd', line.row) .. ': ' .. line.line
+    --     })
+    --     vim.api.nvim_buf_add_highlight(self.buffer_handle, 0, 'navigexMatch', i - 1, 
+    --         line.index_start + digits + 1, line.index_end + digits + 2)
+    -- end
+    for i, line in pairs(self.matches.table) do
+        vim.api.nvim_buf_set_lines(self.buffer_handle, i - 1, -1, false, {
+            '- ' .. line.match
+        })
+        vim.api.nvim_buf_add_highlight(self.buffer_handle, 0, 'navigexMatch', i - 1, 
+            line.index_start + 1, line.index_end + 2)
+    end
 end
 
 -- center current line (eventually transfer to vimscript?)
