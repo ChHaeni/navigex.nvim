@@ -1,20 +1,15 @@
 -- TODO:
---  - add option to add line numbers
 --  - add hierarchical matching
---      -> add option to provide several patterns
 --      -> also add mapping to jump to upper level?
 --
 -- arguments: tables with a) pattern to match b) replacement (\1 or entire line) c) highlighting color (or just highlight yes/no?)
 -- CHECK -> non-matching group in lua?
 -- TODO how are options set in a lua plugin?
 
--- what pattern types should be made available?
--- 1) pattern without group -> e.g. function -> highlight function
--- 2) pattern with group -> e.g. section -> highlight section title (match)
+-- TODO: 
+--      - set cursor at current (latest) match
 
 -- ideas from last night:
---  a) create string to display (without line number) and level index in find_pattern()
---      instead of bloated table
 --  b) add ui argument (same way as options)
 --  c) solve issue with returning entire line + highlighting vs. returning match only
 --      -> provide option match_only? -> but what if group exists
@@ -238,6 +233,8 @@ function Nav:create_window()
     for i = 1, #self.patterns do
         vim.fn.win_execute(win, 'hi def link ' .. self.patterns[i].hi_group .. ' ' .. self.patterns[i].highlighting_color)
     end
+    -- set nomodifiable
+    vim.fn.win_execute(win, 'set nomodifiable')
 end
 
 -- buffer mappings
@@ -252,10 +249,10 @@ function Nav:buffer_mappings()
     vim.api.nvim_buf_set_keymap(self.buffer_handle, 'n', 'q', ':close<cr>', {})
     vim.api.nvim_buf_set_keymap(self.buffer_handle, 'n', '<esc>', ':close<cr>', {})
     vim.api.nvim_buf_set_keymap(self.buffer_handle, 'n', '<cr>', ':lua Nav:centering_line(' .. bufnr .. ')<cr>', {})
-    -- vim.api.nvim_buf_set_keymap(self.buffer_handle, 'n', 'h', ':normal! h<cr>', {})
-    -- vim.api.nvim_buf_set_keymap(self.buffer_handle, 'n', 'j', ':normal! j<cr>', {})
-    -- vim.api.nvim_buf_set_keymap(self.buffer_handle, 'n', 'k', ':normal! k<cr>', {})
-    -- vim.api.nvim_buf_set_keymap(self.buffer_handle, 'n', 'l', ':normal! l<cr>', {})
+    vim.api.nvim_buf_set_keymap(self.buffer_handle, 'n', '<c-j>', 
+        ':normal! j<cr><bar>:lua Nav:centering_line(' .. bufnr .. ')<cr>', {})
+    vim.api.nvim_buf_set_keymap(self.buffer_handle, 'n', '<c-k>', 
+        ':normal! k<cr><bar>:lua Nav:centering_line(' .. bufnr .. ')<cr>', {})
 end
 
 -- center current line (eventually transfer to vimscript?)
