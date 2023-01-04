@@ -215,21 +215,23 @@ end
 
 -- create window
 function Nav:create_window()
-    -- TODO: add highlighting color as optional argument
     -- get the current UI
     local ui = vim.api.nvim_list_uis()[1]
     -- define the size of the floating window
-    local width = math.ceil(ui.width / 2)
-    -- local height = ui.height / 2
+    local wborder = 3
+    local hborder = 1
+    local width = math.ceil(ui.width * 0.45) - wborder
+    local height = math.ceil(ui.height * 0.9) - 2 * hborder
     -- create the floating window
     local opts = {
         relative = 'editor',
         width = width,
-        height = ui.height,
-        col = ui.width - width,
-        row = 0,
+        height = height,
+        col = ui.width - width - wborder,
+        row = hborder,
         anchor = 'NW',
-        style = 'minimal'
+        border = 'rounded'
+        -- style = 'minimal'
         }
     local win = vim.api.nvim_open_win(self.buffer_handle, 1, opts)
     -- highlighting color (TODO: Add highlighting color as option)
@@ -250,10 +252,10 @@ function Nav:buffer_mappings()
     vim.api.nvim_buf_set_keymap(self.buffer_handle, 'n', 'q', ':close<cr>', {})
     vim.api.nvim_buf_set_keymap(self.buffer_handle, 'n', '<esc>', ':close<cr>', {})
     vim.api.nvim_buf_set_keymap(self.buffer_handle, 'n', '<cr>', ':lua Nav:centering_line(' .. bufnr .. ')<cr>', {})
-    vim.api.nvim_buf_set_keymap(self.buffer_handle, 'n', 'h', ':normal! h<cr>', {})
-    vim.api.nvim_buf_set_keymap(self.buffer_handle, 'n', 'j', ':normal! j<cr>', {})
-    vim.api.nvim_buf_set_keymap(self.buffer_handle, 'n', 'k', ':normal! k<cr>', {})
-    vim.api.nvim_buf_set_keymap(self.buffer_handle, 'n', 'l', ':normal! l<cr>', {})
+    -- vim.api.nvim_buf_set_keymap(self.buffer_handle, 'n', 'h', ':normal! h<cr>', {})
+    -- vim.api.nvim_buf_set_keymap(self.buffer_handle, 'n', 'j', ':normal! j<cr>', {})
+    -- vim.api.nvim_buf_set_keymap(self.buffer_handle, 'n', 'k', ':normal! k<cr>', {})
+    -- vim.api.nvim_buf_set_keymap(self.buffer_handle, 'n', 'l', ':normal! l<cr>', {})
 end
 
 -- center current line (eventually transfer to vimscript?)
