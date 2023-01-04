@@ -28,8 +28,8 @@ end
 Nav = {
     options = {
         line_numbers = true,
-        list_symbol = {'a) ', 'b) ', 'c) '},
-        highlighting_color = "String",
+        list_symbol = {'a) ', 'b) ', 'c) ', 'd) '},
+        highlighting_color = {"String", "Type", "Identifier", "Constant"},
         indentation = 2,
         trim_whitespace = false
     }
@@ -121,12 +121,15 @@ function Nav:initalize_pattern(pattern)
             return nil, print("navigex: 'pattern': expected string, got " .. type(self.patterns[i].pattern))
         end
     end
-    -- fix indentation
+    -- fix indentation & add highlighting group
     local indent = 0
     for i = 1, #self.patterns do
+        -- indent
         indent = indent + self.patterns[i].indentation
         self.patterns[i].indentation = indent
         self.patterns[i].indent_string = string.rep(' ', indent)
+        -- highlighting
+        self.patterns[i].hi_group = "navigexMatch" .. i
     end
 end
 
@@ -190,15 +193,18 @@ function Nav:populate_ui()
             vim.api.nvim_buf_set_lines(self.buffer_handle, i - 1, -1, false, {
                 string.format('%' .. digits .. 'd', line.row) .. ': ' .. line.display
             })
-            vim.api.nvim_buf_add_highlight(self.buffer_handle, 0, 'navigexMatch', i - 1, 
-                line.index_start + digits + 1, line.index_end + digits + 2)
+            vim.api.nvim_buf_add_highlight(self.buffer_handle, 0, 
+                self.patterns[line.level].hi_group,
+                -- 'navigexMatch',
+                i - 1, line.index_start + digits + 1, line.index_end + digits + 2)
         else
             -- style 2: line/match only
             vim.api.nvim_buf_set_lines(self.buffer_handle, i - 1, -1, false, {
                 line.display
             })
-            vim.api.nvim_buf_add_highlight(self.buffer_handle, 0, 'navigexMatch', i - 1, 
-                line.index_start - 1, line.index_end)
+            vim.api.nvim_buf_add_highlight(self.buffer_handle, 0, 
+                self.patterns[line.level].hi_group,
+                i - 1, line.index_start - 1, line.index_end)
         end
     end
 end
@@ -223,7 +229,9 @@ function Nav:create_window()
         }
     local win = vim.api.nvim_open_win(self.buffer_handle, 1, opts)
     -- highlighting color (TODO: Add highlighting color as option)
-    vim.fn.win_execute(win, 'hi def link navigexMatch ' .. self.options.highlighting_color)
+    for i = 1, #self.patterns do
+        vim.fn.win_execute(win, 'hi def link ' .. self.patterns[i].hi_group .. ' ' .. self.patterns[i].highlighting_color)
+    end
 end
 
 -- buffer mappings
