@@ -81,6 +81,10 @@ function Nav:initalize_pattern(pattern)
     elseif type(pattern) ~= "table" then
         return nil, print("navigex: argument 'pattern': expected table or string, got " .. type(pattern))
     end
+    -- remove indicator if only one level
+    if #pattern == 1 then
+        self.options.list_symbol = ''
+    end
     -- loop over patterns and add options
     self.patterns = {}
     for i, t in ipairs(pattern) do
