@@ -12,6 +12,13 @@
 -- 1) pattern without group -> e.g. function -> highlight function
 -- 2) pattern with group -> e.g. section -> highlight section title (match)
 
+-- ideas from last night:
+--  a) create string to display (without line number) and level index in find_pattern()
+--      instead of bloated table
+--  b) add ui argument (same way as options)
+--  c) solve issue with returning entire line + highlighting vs. returning match only
+--      -> provide option match_only? -> but what if group exists
+
 -- global function
 function navigex(pattern, options)
     Nav:navigate(pattern, options)
@@ -21,9 +28,9 @@ end
 Nav = {
     options = {
         line_numbers = true,
-        list_symbols = {'a', 'b', 'c'},
-        highlighting_colors = "String",
-        indentation = 4,
+        list_symbol = {'a) ', 'b) ', 'c) '},
+        highlighting_color = "String",
+        indentation = 2,
         trim_whitespace = false
     }
 }
@@ -84,6 +91,9 @@ function Nav:initalize_pattern(pattern)
                 local len = #v
                 local ind = (i - 1) % len + 1
                 self.patterns[i][k] = v[ind]
+            elseif i == 1 and k == "indentation" then
+                -- set first indent to 0 by default
+                self.patterns[i][k] = 0
             else
                 self.patterns[i][k] = v
             end
@@ -111,6 +121,13 @@ function Nav:initalize_pattern(pattern)
             return nil, print("navigex: 'pattern': expected string, got " .. type(self.patterns[i].pattern))
         end
     end
+    -- fix indentation
+    local indent = 0
+    for i = 1, #self.patterns do
+        indent = indent + self.patterns[i].indentation
+        self.patterns[i].indentation = indent
+        self.patterns[i].indent_string = string.rep(' ', indent)
+    end
 end
 
 -- find pattern in current buffer
@@ -128,55 +145,61 @@ function Nav:find_pattern()
     local i = 0
     for k, line in pairs(buf_content) do
         -- iterate over patterns
-        for _, tab in ipairs(self.patterns) do
+        for ip, tab in ipairs(self.patterns) do
             -- match pattern? 
             s, e, m = line:find(tab.pattern, 0, plain)
             if s ~= nil then
+                -- create string to show
+                -- trim whitespace (not used yet)
+                -- add symbol and indentation to line
+                local display_string = self.patterns[ip].indent_string .. self.patterns[ip].list_symbol .. line
+                -- fix s & e -> what if group is provided?
+                --  -> I guess that string.find provides s & e for entire match -> rerun find with m as pattern
+                if m then
+                    s, e, _ = line:find(m, 0, true)
+                end
+                -- add indentation to indices
+                s = s + self.patterns[ip].indentation + #self.patterns[ip].list_symbol
+                e = e + self.patterns[ip].indentation + #self.patterns[ip].list_symbol
+                -- update index
                 i = i + 1
                 out[i] = {
+                    -- we need: line number, string to show, highlighting start/end, level
                     row = k, 
-                    line = line, 
+                    display = display_string,
                     index_start = s, 
-                    index_end = e, 
-                    color = tab.highlighting_colors,
-                    indent = tab.indentation,
-                    symbol = list_symbols,
-                    number = line_numbers,
-                    trim = trim_whitespace,
-                    match = m or line
+                    index_end = e,
+                    level = ip
                 } 
             end
         end
     end
-    self.matches = {table = out, max = out[i].row}
+    self.matches, self.max_row = out, out[i].row
 end
 
 -- populate ui
 function Nav:populate_ui()
-    -- TODO: 1) add line number as optional argument
-    --       2) what indicator should be used? triangle to right, bullet, ...
-    --       3) add option to use hierarchical toc -> e.g. by providing a pattern table
-    --       2+3) -> pattern should be table with indicator and numbering defined. If missing, get indicator from default and numbering from global option
     -- create scratch buffer for floating window
     self.buffer_handle = vim.api.nvim_create_buf(false, true)
     -- get max row number to align after row numbers
-    local digits = math.floor(math.log10(self.matches.max)) + 1
+    local digits = math.floor(math.log10(self.max_row)) + 1
     -- fill buffer with matches
-    -- style 1: row + line
-    -- style 2: match only (with a centered dot as prefix?)
-    -- for i, line in pairs(self.matches.table) do
-    --     vim.api.nvim_buf_set_lines(self.buffer_handle, i - 1, -1, false, {
-    --         string.format('%' .. digits .. 'd', line.row) .. ': ' .. line.line
-    --     })
-    --     vim.api.nvim_buf_add_highlight(self.buffer_handle, 0, 'navigexMatch', i - 1, 
-    --         line.index_start + digits + 1, line.index_end + digits + 2)
-    -- end
-    for i, line in pairs(self.matches.table) do
-        vim.api.nvim_buf_set_lines(self.buffer_handle, i - 1, -1, false, {
-            '- ' .. line.match
-        })
-        vim.api.nvim_buf_add_highlight(self.buffer_handle, 0, 'navigexMatch', i - 1, 
-            line.index_start + 1, line.index_end + 2)
+    for i, line in pairs(self.matches) do
+        if self.patterns[line.level].line_numbers then
+            -- style 1: line number + line/match
+            vim.api.nvim_buf_set_lines(self.buffer_handle, i - 1, -1, false, {
+                string.format('%' .. digits .. 'd', line.row) .. ': ' .. line.display
+            })
+            vim.api.nvim_buf_add_highlight(self.buffer_handle, 0, 'navigexMatch', i - 1, 
+                line.index_start + digits + 1, line.index_end + digits + 2)
+        else
+            -- style 2: line/match only
+            vim.api.nvim_buf_set_lines(self.buffer_handle, i - 1, -1, false, {
+                line.display
+            })
+            vim.api.nvim_buf_add_highlight(self.buffer_handle, 0, 'navigexMatch', i - 1, 
+                line.index_start - 1, line.index_end)
+        end
     end
 end
 
@@ -200,7 +223,7 @@ function Nav:create_window()
         }
     local win = vim.api.nvim_open_win(self.buffer_handle, 1, opts)
     -- highlighting color (TODO: Add highlighting color as option)
-    vim.fn.win_execute(win, 'hi def link navigexMatch ' .. self.options.highlighting_colors)
+    vim.fn.win_execute(win, 'hi def link navigexMatch ' .. self.options.highlighting_color)
 end
 
 -- buffer mappings
@@ -225,7 +248,7 @@ end
 function Nav:centering_line(parent_buffer)
     local line = vim.fn.line('.')
     -- get match
-    local m = self.matches.table[line]
+    local m = self.matches[line]
     -- TODO: get row number from floating buffer
     vim.fn.win_execute(vim.fn.bufwinid(parent_buffer), 'normal ' .. m.row .. 'Gzz')
 end
