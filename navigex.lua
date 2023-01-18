@@ -8,6 +8,8 @@
 
 -- TODO: 
 --      - set cursor at current (latest) match
+--      - use vimscript regex
+--      - 
 
 -- ideas from last night:
 --  b) add ui argument (same way as options)
@@ -137,6 +139,7 @@ function Nav:find_pattern()
     -- TODO
     --  - add option to switch to vimscript regex instead of lua patterns?
     --      -> see https://neovim.io/doc/user/lua.html#lua-regex
+    --      & vim.fn.matchstr()
     -- move to function argument
     local plain = false
     -- read content of current buffer
@@ -149,28 +152,28 @@ function Nav:find_pattern()
         -- iterate over patterns
         for ip, tab in ipairs(self.patterns) do
             -- match pattern? 
-            s, e, m = line:find(tab.pattern, 0, plain)
-            if s ~= nil then
+            m = vim.fn.matchstrpos(line, tab.pattern)
+            if m[1] ~= "" then
+            -- s, e, m = line:find(tab.pattern, 0, plain)
+            -- if s ~= nil then
                 -- create string to show
                 -- trim whitespace (not used yet)
                 -- add symbol and indentation to line
                 local display_string = self.patterns[ip].indent_string .. self.patterns[ip].list_symbol .. line
                 -- fix s & e -> what if group is provided?
                 --  -> I guess that string.find provides s & e for entire match -> rerun find with m as pattern
-                if m then
-                    s, e, _ = line:find(m, 0, true)
-                end
+                -- if m then
+                --     s, e, _ = line:find(m, 0, true)
+                -- end
                 -- add indentation to indices
-                s = s + self.patterns[ip].indentation + #self.patterns[ip].list_symbol
-                e = e + self.patterns[ip].indentation + #self.patterns[ip].list_symbol
                 -- update index
                 i = i + 1
                 out[i] = {
                     -- we need: line number, string to show, highlighting start/end, level
                     row = k, 
                     display = display_string,
-                    index_start = s, 
-                    index_end = e,
+                    index_start = m[2] + self.patterns[ip].indentation + #self.patterns[ip].list_symbol,
+                    index_end = m[3] + self.patterns[ip].indentation + #self.patterns[ip].list_symbol,
                     level = ip
                 } 
             end
