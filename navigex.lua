@@ -26,7 +26,7 @@ Nav = {
     options = {
         line_numbers = true,
         list_symbol = {'a) ', 'b) ', 'c) ', 'd) '},
-        highlighting_color = {"String", "Type", "Identifier", "Constant"},
+        highlighting_color = {"Type", "Identifier", "Constant", "String"},
         indentation = 2,
         trim_whitespace = false
     }
@@ -148,12 +148,17 @@ function Nav:find_pattern()
     local out = {}
     -- iterate over content
     local i = 0
+    -- create regexes
+    for _, tab in ipairs(self.patterns) do
+        tab.regex_pattern = vim.regex(tab.pattern)
+    end
     for k, line in pairs(buf_content) do
         -- iterate over patterns
         for ip, tab in ipairs(self.patterns) do
             -- match pattern? 
-            m = vim.fn.matchstrpos(line, tab.pattern)
-            if m[1] ~= "" then
+            -- m = vim.fn.matchstrpos(line, tab.pattern)
+            s, e = tab.regex_pattern:match_str(line)
+            if s ~= nil then
             -- s, e, m = line:find(tab.pattern, 0, plain)
             -- if s ~= nil then
                 -- create string to show
@@ -172,8 +177,10 @@ function Nav:find_pattern()
                     -- we need: line number, string to show, highlighting start/end, level
                     row = k, 
                     display = display_string,
-                    index_start = m[2] + self.patterns[ip].indentation + #self.patterns[ip].list_symbol,
-                    index_end = m[3] + self.patterns[ip].indentation + #self.patterns[ip].list_symbol,
+                    -- index_start = m[2] + self.patterns[ip].indentation + #self.patterns[ip].list_symbol,
+                    -- index_end = m[3] + self.patterns[ip].indentation + #self.patterns[ip].list_symbol,
+                    index_start = s + self.patterns[ip].indentation + #self.patterns[ip].list_symbol,
+                    index_end = e + self.patterns[ip].indentation + #self.patterns[ip].list_symbol,
                     level = ip
                 } 
             end
