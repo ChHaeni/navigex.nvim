@@ -244,6 +244,7 @@ function Nav:create_window()
         vim.fn.win_execute(win, 'hi def link ' .. self.patterns[i].hi_group .. ' ' .. self.patterns[i].highlighting_color)
     end
     -- set nomodifiable
+    -- TODO: change as in floating rhelp!
     vim.fn.win_execute(win, 'set nomodifiable')
 end
 
