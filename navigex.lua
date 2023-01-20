@@ -243,9 +243,8 @@ function Nav:create_window()
     for i = 1, #self.patterns do
         vim.fn.win_execute(win, 'hi def link ' .. self.patterns[i].hi_group .. ' ' .. self.patterns[i].highlighting_color)
     end
-    -- set nomodifiable
-    -- TODO: change as in floating rhelp!
-    vim.fn.win_execute(win, 'set nomodifiable')
+    -- set buffer to nomodifiable
+    vim.api.nvim_buf_set_option(0, 'modifiable', false)
 end
 
 -- buffer mappings
