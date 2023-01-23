@@ -202,6 +202,12 @@ function Nav:populate_ui()
             vim.api.nvim_buf_set_lines(self.buffer_handle, i - 1, -1, false, {
                 string.format('%' .. digits .. 'd', line.row) .. ': ' .. line.display
             })
+            -- row number highlighting
+            vim.api.nvim_buf_add_highlight(self.buffer_handle, 0, 
+                'RhelpNumbers',
+                -- 'navigexMatch',
+                i - 1, 0, digits + 1)
+            -- group highlighting
             vim.api.nvim_buf_add_highlight(self.buffer_handle, 0, 
                 self.patterns[line.level].hi_group,
                 -- 'navigexMatch',
@@ -211,6 +217,7 @@ function Nav:populate_ui()
             vim.api.nvim_buf_set_lines(self.buffer_handle, i - 1, -1, false, {
                 line.display
             })
+            -- group highlighting
             vim.api.nvim_buf_add_highlight(self.buffer_handle, 0, 
                 self.patterns[line.level].hi_group,
                 i - 1, line.index_start - 1, line.index_end)
@@ -245,6 +252,11 @@ function Nav:create_window()
     for i = 1, #self.patterns do
         vim.fn.win_execute(win, 'hi def link ' .. self.patterns[i].hi_group .. ' ' .. self.patterns[i].highlighting_color)
     end
+    -- define number highlight
+    vim.fn.win_execute(win, 'hi! link RhelpNumbers GruvboxFg3')
+    -- vim.fn.win_execute(win, 'hi! link RhelpNumbers Question')
+    -- redefine Normal highlight 
+    vim.api.nvim_win_set_option(win, 'winhighlight', 'Normal:Comment')
     -- set buffer to nomodifiable
     vim.api.nvim_buf_set_option(0, 'modifiable', false)
     -- set nowrap
