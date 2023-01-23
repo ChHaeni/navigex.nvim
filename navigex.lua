@@ -247,6 +247,8 @@ function Nav:create_window()
     end
     -- set buffer to nomodifiable
     vim.api.nvim_buf_set_option(0, 'modifiable', false)
+    -- set nowrap
+    vim.fn.win_execute(win, 'set nowrap')
     -- place cursor
     self:place_cursor()
 end
