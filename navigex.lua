@@ -220,6 +220,8 @@ end
 
 -- create window
 function Nav:create_window()
+    -- get cursorposition
+    self.current_pos = vim.fn.getpos('.')
     -- get the current UI
     local ui = vim.api.nvim_list_uis()[1]
     -- define the size of the floating window
@@ -245,6 +247,8 @@ function Nav:create_window()
     end
     -- set buffer to nomodifiable
     vim.api.nvim_buf_set_option(0, 'modifiable', false)
+    -- place cursor
+    self:place_cursor()
 end
 
 -- buffer mappings
@@ -272,4 +276,18 @@ function Nav:centering_line(parent_buffer)
     local m = self.matches[line]
     -- TODO: get row number from floating buffer
     vim.fn.win_execute(vim.fn.bufwinid(parent_buffer), 'normal ' .. m.row .. 'Gzz')
+end
+
+-- place cursor at match before or at cursor line
+function Nav:place_cursor()
+    local line = 0
+    -- loop over self.matches -> row
+    for i, m in ipairs(self.matches) do
+        if m.row > self.current_pos[2] then
+            break
+        end
+        line = i
+    end
+    -- place cursor
+    vim.fn.cursor(line, 1)
 end
