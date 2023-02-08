@@ -282,6 +282,8 @@ function Nav:buffer_mappings()
         ':normal! j<cr><bar>:lua Nav:centering_line(' .. bufnr .. ')<cr>', ops)
     vim.api.nvim_buf_set_keymap(self.buffer_handle, 'n', '<c-k>', 
         ':normal! k<cr><bar>:lua Nav:centering_line(' .. bufnr .. ')<cr>', ops)
+    vim.api.nvim_buf_set_keymap(self.buffer_handle, 'n', '<c-o>', 
+        ':lua Nav:back_to_origin(' .. bufnr .. ')<cr>', ops)
 end
 
 -- center current line (eventually transfer to vimscript?)
@@ -305,4 +307,11 @@ function Nav:place_cursor()
     end
     -- place cursor
     vim.fn.cursor(line, 1)
+end
+
+-- go back to origin
+function Nav:back_to_origin(parent_buffer)
+    -- place cursor back to origin
+    vim.fn.win_execute(vim.fn.bufwinid(parent_buffer), 'call cursor(' .. 
+        self.current_pos[2] .. ',' .. self.current_pos[3] .. ') | normal zz<cr>')
 end
