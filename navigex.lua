@@ -269,18 +269,19 @@ end
 function Nav:buffer_mappings()
     -- TODO: add user defined keymappings -> how?
     --  - add mappings to:
-    --      a) jump to line & close floating buffer
-    --          -> call normal {line}G | :close
+    --      * jump to origin using <c-o>(?)
     -- get current buffer number
     local bufnr = vim.fn.bufnr('%')
+    -- define options
+    local ops = { noremap = true, silent = true }
     -- define mappings
-    vim.api.nvim_buf_set_keymap(self.buffer_handle, 'n', 'q', ':close<cr>', {})
-    vim.api.nvim_buf_set_keymap(self.buffer_handle, 'n', '<esc>', ':close<cr>', {})
-    vim.api.nvim_buf_set_keymap(self.buffer_handle, 'n', '<cr>', ':lua Nav:centering_line(' .. bufnr .. ')<cr>', {})
+    vim.api.nvim_buf_set_keymap(self.buffer_handle, 'n', 'q', ':close<cr>', ops)
+    vim.api.nvim_buf_set_keymap(self.buffer_handle, 'n', '<esc>', ':close<cr>', ops)
+    vim.api.nvim_buf_set_keymap(self.buffer_handle, 'n', '<cr>', ':lua Nav:centering_line(' .. bufnr .. ')<cr>', ops)
     vim.api.nvim_buf_set_keymap(self.buffer_handle, 'n', '<c-j>', 
-        ':normal! j<cr><bar>:lua Nav:centering_line(' .. bufnr .. ')<cr>', {})
+        ':normal! j<cr><bar>:lua Nav:centering_line(' .. bufnr .. ')<cr>', ops)
     vim.api.nvim_buf_set_keymap(self.buffer_handle, 'n', '<c-k>', 
-        ':normal! k<cr><bar>:lua Nav:centering_line(' .. bufnr .. ')<cr>', {})
+        ':normal! k<cr><bar>:lua Nav:centering_line(' .. bufnr .. ')<cr>', ops)
 end
 
 -- center current line (eventually transfer to vimscript?)
