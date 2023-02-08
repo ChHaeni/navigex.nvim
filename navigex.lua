@@ -1,20 +1,19 @@
--- TODO:
---  - add hierarchical matching
---      -> also add mapping to jump to upper level?
 --
 -- arguments: tables with a) pattern to match b) replacement (\1 or entire line) c) highlighting color (or just highlight yes/no?)
 -- CHECK -> non-matching group in lua?
--- TODO how are options set in a lua plugin?
 
 -- TODO: 
---      - set cursor at current (latest) match
---      - use vimscript regex
---      - 
-
--- ideas from last night:
---  b) add ui argument (same way as options)
---  c) solve issue with returning entire line + highlighting vs. returning match only
---      -> provide option match_only? -> but what if group exists
+--      - use local Nav & return(Nav)
+--      - add hierarchical matching
+--       -> also add mapping to jump to upper level?
+--      - how are options set in a lua plugin?
+--      - add option to show entire line or only matching group
+--      - add ui argument (same way as options)
+--      - solve issue with returning entire line + highlighting vs. returning match only
+--          -> provide option match_only? -> but what if group exists
+--      - add option to switch to lua patterns?
+--      - Add highlighting color as option
+--      - add user defined keymappings -> how?
 
 -- global function
 function navigex(pattern, options)
@@ -136,10 +135,6 @@ end
 
 -- find pattern in current buffer
 function Nav:find_pattern()
-    -- TODO
-    --  - add option to switch to vimscript regex instead of lua patterns?
-    --      -> see https://neovim.io/doc/user/lua.html#lua-regex
-    --      & vim.fn.matchstr()
     -- move to function argument
     local plain = false
     -- read content of current buffer
@@ -248,7 +243,7 @@ function Nav:create_window()
         -- style = 'minimal'
         }
     local win = vim.api.nvim_open_win(self.buffer_handle, 1, opts)
-    -- highlighting color (TODO: Add highlighting color as option)
+    -- highlighting color 
     for i = 1, #self.patterns do
         vim.fn.win_execute(win, 'hi def link ' .. self.patterns[i].hi_group .. ' ' .. self.patterns[i].highlighting_color)
     end
@@ -267,9 +262,6 @@ end
 
 -- buffer mappings
 function Nav:buffer_mappings()
-    -- TODO: add user defined keymappings -> how?
-    --  - add mappings to:
-    --      * jump to origin using <c-o>(?)
     -- get current buffer number
     local bufnr = vim.fn.bufnr('%')
     -- define options
@@ -291,7 +283,7 @@ function Nav:centering_line(parent_buffer)
     local line = vim.fn.line('.')
     -- get match
     local m = self.matches[line]
-    -- TODO: get row number from floating buffer
+    -- set cursor to current line
     vim.fn.win_execute(vim.fn.bufwinid(parent_buffer), 'normal ' .. m.row .. 'Gzz')
 end
 
