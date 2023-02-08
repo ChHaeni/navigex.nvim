@@ -20,6 +20,9 @@ function navigex(pattern, options)
     Nav:navigate(pattern, options)
 end
 
+-- global vimscript function
+vim.api.nvim_create_user_command('Navigex', 'lua navigex([[<args>]])', {nargs='*'})
+
 -- define class
 Nav = {
     options = {
