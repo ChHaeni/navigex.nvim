@@ -28,7 +28,7 @@ Nav = {
     options = {
         line_numbers = true,
         list_symbol = {'a) ', 'b) ', 'c) ', 'd) '},
-        highlighting_color = {"Type", "Identifier", "Constant", "String"},
+        hi_group = {"Type", "Identifier", "Constant", "String"},
         indentation = 2,
         trim_whitespace = true
     }
@@ -132,7 +132,7 @@ function Nav:initalize_pattern(pattern)
         self.patterns[i].indentation = indent
         self.patterns[i].indent_string = string.rep(' ', indent)
         -- highlighting
-        self.patterns[i].hi_group = "navigexMatch" .. i
+        self.patterns[i].hi_group_name = "navigexMatch" .. i
     end
 end
 
@@ -214,7 +214,7 @@ function Nav:populate_ui()
                 i - 1, 0, digits + 1)
             -- group highlighting
             vim.api.nvim_buf_add_highlight(self.buffer_handle, 0, 
-                self.patterns[line.level].hi_group,
+                self.patterns[line.level].hi_group_name,
                 -- 'navigexMatch',
                 i - 1, line.index_start + digits + 1, line.index_end + digits + 2)
         else
@@ -224,7 +224,7 @@ function Nav:populate_ui()
             })
             -- group highlighting
             vim.api.nvim_buf_add_highlight(self.buffer_handle, 0, 
-                self.patterns[line.level].hi_group,
+                self.patterns[line.level].hi_group_name,
                 i - 1, line.index_start - 1, line.index_end)
         end
     end
@@ -255,7 +255,7 @@ function Nav:create_window()
     local win = vim.api.nvim_open_win(self.buffer_handle, 1, opts)
     -- highlighting color 
     for i = 1, #self.patterns do
-        vim.fn.win_execute(win, 'hi def link ' .. self.patterns[i].hi_group .. ' ' .. self.patterns[i].highlighting_color)
+        vim.fn.win_execute(win, 'hi def link ' .. self.patterns[i].hi_group_name .. ' ' .. self.patterns[i].hi_group)
     end
     -- define number highlight
     vim.fn.win_execute(win, 'hi! link RhelpNumbers GruvboxFg3')
