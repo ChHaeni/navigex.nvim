@@ -17,6 +17,14 @@
 
 -- global function
 function navigex(pattern, options)
+    -- set default options
+    Nav.options = {
+        line_numbers = true,
+        list_symbol = {'a) ', 'b) ', 'c) ', 'd) '},
+        hi_group = {"Type", "Identifier", "Constant", "String"},
+        indentation = 2,
+        display_style = 'trimmed' -- 'trimmed', 'line', 'matches'
+    }
     Nav:navigate(pattern, options)
 end
 
@@ -25,13 +33,7 @@ vim.api.nvim_create_user_command('Navigex', 'lua navigex([[<args>]])', {nargs='*
 
 -- define class
 Nav = {
-    options = {
-        line_numbers = true,
-        list_symbol = {'a) ', 'b) ', 'c) ', 'd) '},
-        hi_group = {"Type", "Identifier", "Constant", "String"},
-        indentation = 2,
-        trim_whitespace = true
-    }
+    options = {}
 }
 
 -- main function
