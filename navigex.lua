@@ -161,14 +161,19 @@ function Nav:find_pattern()
             -- m = vim.fn.matchstrpos(line, tab.pattern)
             s, e = tab.regex_pattern:match_str(line)
             if s ~= nil then
-            -- s, e, m = line:find(tab.pattern, 0, plain)
-            -- if s ~= nil then
+                s = s + 1
                 -- create string to show
-                -- trim whitespace
-                local first = 1
-                if self.patterns[ip].trim_whitespace then
+                if self.patterns[ip].display_style == 'trimmed' then
+                    -- trim whitespace
                     first = line:find('[^%s]')
                     line = line:sub(first)
+                    s = s - first + 1
+                    e = e - first + 1
+                elseif self.patterns[ip].display_style == 'matches' then
+                    -- show matches only
+                    line = line:sub(s, e)
+                    e = e - s + 1
+                    s = 1
                 end
                 -- add symbol and indentation to line
                 local display_string = self.patterns[ip].indent_string .. self.patterns[ip].list_symbol .. line
@@ -184,12 +189,10 @@ function Nav:find_pattern()
                     -- we need: line number, string to show, highlighting start/end, level
                     row = k, 
                     display = display_string,
-                    -- index_start = m[2] + self.patterns[ip].indentation + #self.patterns[ip].list_symbol,
-                    -- index_end = m[3] + self.patterns[ip].indentation + #self.patterns[ip].list_symbol,
                     index_start = s + self.patterns[ip].indentation + 
-                        #self.patterns[ip].list_symbol - first + 1,
+                        #self.patterns[ip].list_symbol,
                     index_end = e + self.patterns[ip].indentation + 
-                        #self.patterns[ip].list_symbol - first + 1,
+                        #self.patterns[ip].list_symbol,
                     level = ip
                 } 
             end
