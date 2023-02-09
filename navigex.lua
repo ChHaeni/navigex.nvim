@@ -42,12 +42,14 @@ function Nav:navigate(pattern, options)
     self:initalize_pattern(pattern)
     -- get matches
     self:find_pattern()
-    -- populate ui
-    self:populate_ui()
-    -- add mappings
-    self:buffer_mappings()
-    -- build ui
-    self:create_window()
+    if self.num_matches > 0 then
+        -- populate ui
+        self:populate_ui()
+        -- add mappings
+        self:buffer_mappings()
+        -- build ui
+        self:create_window()
+    end
     -- something to return?
 end
 
@@ -191,7 +193,16 @@ function Nav:find_pattern()
             end
         end
     end
-    self.matches, self.max_row = out, out[i].row
+    -- assign if pattern matches were found
+    if i > 0 then
+        self.matches, self.max_row = out, out[i].row
+    else
+        -- let user know
+        vim.api.nvim_echo({{'navigex:', 'Identifier'}, 
+            {' no matches found...', 'None'}}, true, {})
+    end
+    -- assign number of matches
+    self.num_matches = i
 end
 
 -- populate ui
