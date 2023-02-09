@@ -30,7 +30,7 @@ Nav = {
         list_symbol = {'a) ', 'b) ', 'c) ', 'd) '},
         highlighting_color = {"Type", "Identifier", "Constant", "String"},
         indentation = 2,
-        trim_whitespace = false
+        trim_whitespace = true
     }
 }
 
@@ -160,7 +160,12 @@ function Nav:find_pattern()
             -- s, e, m = line:find(tab.pattern, 0, plain)
             -- if s ~= nil then
                 -- create string to show
-                -- trim whitespace (not used yet)
+                -- trim whitespace
+                local first = 1
+                if self.patterns[ip].trim_whitespace then
+                    first = line:find('[^%s]')
+                    line = line:sub(first)
+                end
                 -- add symbol and indentation to line
                 local display_string = self.patterns[ip].indent_string .. self.patterns[ip].list_symbol .. line
                 -- fix s & e -> what if group is provided?
@@ -177,8 +182,10 @@ function Nav:find_pattern()
                     display = display_string,
                     -- index_start = m[2] + self.patterns[ip].indentation + #self.patterns[ip].list_symbol,
                     -- index_end = m[3] + self.patterns[ip].indentation + #self.patterns[ip].list_symbol,
-                    index_start = s + self.patterns[ip].indentation + #self.patterns[ip].list_symbol,
-                    index_end = e + self.patterns[ip].indentation + #self.patterns[ip].list_symbol,
+                    index_start = s + self.patterns[ip].indentation + 
+                        #self.patterns[ip].list_symbol - first + 1,
+                    index_end = e + self.patterns[ip].indentation + 
+                        #self.patterns[ip].list_symbol - first + 1,
                     level = ip
                 } 
             end
