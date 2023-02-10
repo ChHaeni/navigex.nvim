@@ -14,6 +14,7 @@
 --      - add option to switch to lua patterns?
 --      - Add highlighting color as option
 --      - add user defined keymappings -> how?
+--      - fix & document different ways of providing several layers & options
 
 -- global function
 function navigex(pattern, options)
