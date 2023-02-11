@@ -7,11 +7,7 @@
 --      - add hierarchical matching
 --       -> also add mapping to jump to upper level?
 --      - how are options set in a lua plugin?
---      - add option to show entire line or only matching group
 --      - add ui argument (same way as options)
---      - solve issue with returning entire line + highlighting vs. returning match only
---          -> provide option match_only? -> but what if group exists
---      - add option to switch to lua patterns?
 --      - Add highlighting color as option
 --      - add user defined keymappings -> how?
 --      - fix & document different ways of providing several layers & options
@@ -300,6 +296,7 @@ function Nav:buffer_mappings()
     vim.api.nvim_buf_set_keymap(self.buffer_handle, 'n', '<c-h>', ':close<cr>', ops)
     -- place cursor in original buffer
     vim.api.nvim_buf_set_keymap(self.buffer_handle, 'n', '<cr>', ':lua Nav:centering_line(' .. bufnr .. ')<cr>', ops)
+    vim.api.nvim_buf_set_keymap(self.buffer_handle, 'n', '<c-i>', ':lua Nav:centering_line(' .. bufnr .. ')<cr><bar>:close<cr>', ops)
     vim.api.nvim_buf_set_keymap(self.buffer_handle, 'n', '<c-j>', 
         ':normal! j<cr><bar>:lua Nav:centering_line(' .. bufnr .. ')<cr>', ops)
     vim.api.nvim_buf_set_keymap(self.buffer_handle, 'n', '<c-k>', 
