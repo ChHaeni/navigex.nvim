@@ -330,7 +330,9 @@ end
 
 -- go back to origin
 function Nav:back_to_origin(parent_buffer)
-    -- place cursor back to origin
+    -- place cursor back to origin (parent buffer)
     vim.fn.win_execute(vim.fn.bufwinid(parent_buffer), 'call cursor(' .. 
         self.current_pos[2] .. ',' .. self.current_pos[3] .. ') | normal zz<cr>')
+    -- navigex buffer
+    self:place_cursor()
 end
