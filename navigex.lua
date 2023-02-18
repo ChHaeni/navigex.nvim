@@ -11,6 +11,7 @@
 --      - Add highlighting color as option
 --      - add user defined keymappings -> how?
 --      - fix & document different ways of providing several layers & options
+--      - delete, yank, paste, create sections
 
 -- global function
 function navigex(pattern, options)
@@ -303,6 +304,8 @@ function Nav:buffer_mappings()
         ':normal! k<cr><bar>:lua Nav:centering_line(' .. bufnr .. ')<cr>', ops)
     vim.api.nvim_buf_set_keymap(self.buffer_handle, 'n', '<c-o>', 
         ':lua Nav:back_to_origin(' .. bufnr .. ')<cr>', ops)
+    -- delete, yank, paste
+    vim.api.nvim_buf_set_keymap(self.buffer_handle, 'n', 'd', ':lua Nav:delete_section()<cr>g@', {})
 end
 
 -- center current line (eventually transfer to vimscript?)
@@ -335,4 +338,32 @@ function Nav:back_to_origin(parent_buffer)
         self.current_pos[2] .. ',' .. self.current_pos[3] .. ') | normal zz<cr>')
     -- navigex buffer
     self:place_cursor()
+end
+
+-- delete section (https://stackoverflow.com/a/72197874)
+function Nav:delete_section(parent_buffer)
+     -- backup previous reference
+     local old_func = vim.go.operatorfunc 
+    -- set a globally callable object/function
+    _G.opfunc_delete_section = function()
+        -- the content covered by the motion is between the [ and ] marks, so get those
+        local line_from = vim.api.nvim_buf_get_mark(0, '[')
+        local line_to = vim.api.nvim_buf_get_mark(0, ']')
+        print('from ' .. line_from[1] .. ' to ' .. line_to[1])
+        -- vim.go vs vim.bo[{bufnr}].operatorfunc
+        -- use registers n (Nav) and b (buffer)
+        -- -> append to registers (to be able to use dd several times?)
+        -- -- get current line
+        -- local line = vim.fn.line('.')
+        -- -- get match from
+        -- local from = self.matches[line].row
+        -- -- get match to
+        -- local to = self.matches[line + 1].row - 1
+        -- -- set cursor to current line
+        -- restore previous opfunc
+        vim.go.operatorfunc = old_func 
+        -- deletes itself from global namespace
+        _G.op_func_formatting = nil 
+  end
+  vim.go.operatorfunc = 'v:lua.opfunc_delete_section'
 end
