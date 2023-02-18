@@ -295,8 +295,8 @@ function Nav:buffer_mappings()
     vim.api.nvim_buf_set_keymap(self.buffer_handle, 'n', '<esc>', ':close<cr>', ops)
     vim.api.nvim_buf_set_keymap(self.buffer_handle, 'n', '<c-h>', ':close<cr>', ops)
     -- place cursor in original buffer
-    vim.api.nvim_buf_set_keymap(self.buffer_handle, 'n', '<cr>', ':lua Nav:centering_line(' .. bufnr .. ')<cr>', ops)
-    vim.api.nvim_buf_set_keymap(self.buffer_handle, 'n', '<c-i>', ':lua Nav:centering_line(' .. bufnr .. ')<cr><bar>:close<cr>', ops)
+    vim.api.nvim_buf_set_keymap(self.buffer_handle, 'n', '<c-i>', ':lua Nav:centering_line(' .. bufnr .. ')<cr>', ops)
+    vim.api.nvim_buf_set_keymap(self.buffer_handle, 'n', '<cr>', ':lua Nav:centering_line(' .. bufnr .. ')<cr><bar>:close<cr>', ops)
     vim.api.nvim_buf_set_keymap(self.buffer_handle, 'n', '<c-j>', 
         ':normal! j<cr><bar>:lua Nav:centering_line(' .. bufnr .. ')<cr>', ops)
     vim.api.nvim_buf_set_keymap(self.buffer_handle, 'n', '<c-k>', 
